@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/logo.png?raw=true" alt="LoadPulse Logo" width="140" height="140" />
+  <img src="docs/images/logo.png?raw=true" alt="LoadPulse Logo" width="130" style="border-radius: 24px;" />
 </p>
 
 <h1 align="center">LoadPulse</h1>
@@ -17,11 +17,12 @@
 
 <p align="center">
   <a href="#core-capabilities">Capabilities</a> &bull;
+  <a href="#visual-tour">Visual Tour</a> &bull;
   <a href="#quickstart">Quickstart</a> &bull;
   <a href="#architecture">Architecture</a> &bull;
   <a href="#terminal-hud">Terminal HUD</a> &bull;
   <a href="#yaml-scenarios">YAML Scenarios</a> &bull;
-  <a href="#ci-cd-sla-assertions">CI/CD SLA Assertions</a> &bull;
+  <a href="#regression-diff">Regression Diff</a> &bull;
   <a href="#html-reports">HTML Reports</a> &bull;
   <a href="#verification-and-testing">Testing</a>
 </p>
@@ -31,6 +32,32 @@
 LoadPulse is an open source load testing engine designed for low-latency API benchmarking. It replaces legacy tools that run blindly without live feedback or require heavy JavaScript runtimes.
 
 Using Project Loom Virtual Threads (`java.lang.Thread.ofVirtual()`), LoadPulse runs thousands of concurrent requests with low memory overhead on standard developer machines. Latencies are recorded with microsecond accuracy using HdrHistogram, compensating for Coordinated Omission to guarantee realistic p99 and p99.9 measurements.
+
+## Visual tour
+
+### 1. Live interactive ANSI terminal HUD
+
+High-refresh dashboard displaying throughput speedometers, microsecond latency matrices, dynamic Unicode distribution histograms, and live hotkey controls (`+`, `-`, `p`, `q`).
+
+<p align="center">
+  <img src="docs/images/screenshot-terminal.png?raw=true" alt="LoadPulse Terminal HUD" width="900" style="border-radius: 8px;" />
+</p>
+
+### 2. Standalone offline HTML benchmark reports
+
+Zero-dependency single-file reports containing logarithmic SVG percentile ladders, latency bucket distributions, status breakdowns, and SLA evaluation badges.
+
+<p align="center">
+  <img src="docs/images/screenshot-html-report.png?raw=true" alt="LoadPulse HTML Report" width="900" style="border-radius: 8px;" />
+</p>
+
+### 3. Automated performance regression diff analysis
+
+Side-by-side comparison between baseline and candidate benchmark runs with percentage deltas and threshold breach alerts for CI pipelines.
+
+<p align="center">
+  <img src="docs/images/screenshot-diff.png?raw=true" alt="LoadPulse Regression Diff" width="900" style="border-radius: 8px;" />
+</p>
 
 ## Core capabilities
 
