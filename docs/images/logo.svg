@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
     <clipPath id="squircle-clip">
-      <rect x="28" y="28" width="968" height="968" rx="220" />
+      <rect x="24" y="24" width="976" height="976" rx="220" />
     </clipPath>
 
-    <!-- Linear Gradients -->
+    <!-- Electric Cyan Optic & Telemetry Gradients -->
     <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00f5ff"/>
       <stop offset="100%" stop-color="#0284c7"/>
@@ -15,196 +15,205 @@
       <stop offset="100%" stop-color="#00f5ff"/>
     </linearGradient>
 
-    <linearGradient id="obsidian-dark" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#020617"/>
+    <linearGradient id="amber-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#ea580c"/>
     </linearGradient>
 
-    <linearGradient id="slate-light" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#334155"/>
-      <stop offset="100%" stop-color="#475569"/>
-    </linearGradient>
-
-    <linearGradient id="slate-mid" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Obsidian & Slate Armor Shading -->
+    <linearGradient id="slate-body" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0b0f19"/>
+    </linearGradient>
+
+    <linearGradient id="slate-facet-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
       <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
 
-    <linearGradient id="slate-deep" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
+    <linearGradient id="slate-facet-mid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
       <stop offset="100%" stop-color="#1e293b"/>
     </linearGradient>
 
-    <!-- Subtle Drop Shadow for Gateway -->
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.16" />
+    <linearGradient id="slate-facet-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Drop Shadow -->
+    <filter id="subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.14" />
     </filter>
 
-    <filter id="cyan-bloom" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00f5ff" flood-opacity="0.7" />
+    <filter id="cyan-bloom" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#00f5ff" flood-opacity="0.65" />
     </filter>
   </defs>
 
   <!-- Luxury White Squircle Container -->
-  <rect x="28" y="28" width="968" height="968" rx="220" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
+  <rect x="24" y="24" width="976" height="976" rx="220" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
 
   <g clip-path="url(#squircle-clip)">
-    <g transform="translate(512, 512)" filter="url(#shadow)">
+    <g transform="translate(512, 512)" filter="url(#subtle-shadow)">
 
-      <!-- Hexagonal Architectural Gateway Frame -->
+      <!-- 1. The Hexagonal Architecture Gateway (Massive 40px Outer Frame) -->
       <polygon points="
-        0,-380
-        329,-190
-        329,190
-        0,380
-        -329,190
-        -329,-190
-      " fill="none" stroke="#0f172a" stroke-width="32" stroke-linejoin="round" />
+        0,-390
+        338,-195
+        338,195
+        0,390
+        -338,195
+        -338,-195
+      " fill="none" stroke="#0f172a" stroke-width="40" stroke-linejoin="round" />
 
-      <!-- Inner Dashed Telemetry Hexagon -->
+      <!-- Inner Hexagon Accent (Telemetry Precision Dashed Line) -->
       <polygon points="
-        0,-345
-        299,-172
-        299,172
-        0,345
-        -299,172
-        -299,-172
-      " fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.5" stroke-dasharray="16, 12" />
+        0,-355
+        307,-177
+        307,177
+        0,355
+        -307,177
+        -307,-177
+      " fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.45" stroke-dasharray="16, 12" />
 
-      <!-- Hexagon Telemetry Nodes -->
-      <circle cx="0" cy="-345" r="6" fill="#00f5ff" />
-      <circle cx="299" cy="-172" r="6" fill="#00f5ff" />
-      <circle cx="299" cy="172" r="6" fill="#00f5ff" />
-      <circle cx="0" cy="345" r="6" fill="#00f5ff" />
-      <circle cx="-299" cy="172" r="6" fill="#00f5ff" />
-      <circle cx="-299" cy="-172" r="6" fill="#00f5ff" />
+      <!-- Telemetry Corner Nodes -->
+      <circle cx="0" cy="-355" r="6" fill="#00f5ff" />
+      <circle cx="307" cy="-177" r="6" fill="#00f5ff" />
+      <circle cx="307" cy="177" r="6" fill="#00f5ff" />
+      <circle cx="0" cy="355" r="6" fill="#00f5ff" />
+      <circle cx="-307" cy="177" r="6" fill="#00f5ff" />
+      <circle cx="-307" cy="-177" r="6" fill="#00f5ff" />
 
-      <!-- ==================== MASCOT: THE OBSIDIAN CHEETAH ==================== -->
+      <!-- 2. THE OBSIDIAN CHEETAH (Acinonyx Jubatus - Pure Speed & Microsecond Precision) -->
 
-      <!-- 1. Base Silhouette (Cheetah Head Outer Mass) -->
+      <!-- Outer Muscular Body & Shoulder Base Silhouette -->
       <path d="
-        M 0,-185
-        C -40,-185 -70,-175 -95,-155
-        L -185,-275
-        C -195,-285 -205,-270 -200,-255
-        L -165,-105
-        C -190,-60 -235,10 -235,50
-        C -235,85 -215,115 -180,140
-        L -140,240
-        L -60,285
-        L 0,310
-        L 60,285
-        L 140,240
-        L 180,140
-        C 215,115 235,85 235,50
-        C 235,10 190,-60 165,-105
-        L 200,-255
-        C 205,-270 195,-285 185,-275
-        L 95,-155
-        C 70,-175 40,-185 0,-185
+        M 0,-180
+        L 55,-175
+        L 95,-185
+        L 145,-265
+        L 175,-245
+        L 155,-160
+        L 190,-70
+        L 275,70
+        L 295,195
+        L 210,225
+        L 220,300
+        L 120,320
+        L 0,360
+        L -120,320
+        L -220,300
+        L -210,225
+        L -295,195
+        L -275,70
+        L -190,-70
+        L -155,-160
+        L -175,-245
+        L -145,-265
+        L -95,-185
+        L -55,-175
         Z
-      " fill="url(#obsidian-dark)" />
+      " fill="url(#slate-body)" stroke="#0f172a" stroke-width="8" stroke-linejoin="round" />
 
-      <!-- 2. Chest Armor Shield -->
-      <polygon points="0,170 -130,225 -55,290 0,310" fill="url(#slate-deep)" />
-      <polygon points="0,170 130,225 55,290 0,310" fill="url(#slate-mid)" />
+      <!-- Rounded Athletic Cheetah Ears -->
+      <!-- Left Ear Inner -->
+      <polygon points="-95,-185 -145,-265 -165,-240 -125,-165" fill="url(#cyan-glow)" />
+      <!-- Right Ear Inner -->
+      <polygon points="95,-185 145,-265 165,-240 125,-165" fill="url(#cyan-glow)" />
 
-      <!-- 3. Heartbeat Pulse Wave Accent (LoadPulse Core) -->
-      <polyline points="-120,230 -60,230 -35,190 -10,265 10,190 35,265 60,230 120,230"
-        fill="none" stroke="url(#cyan-glow)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#cyan-bloom)" />
+      <!-- Ear Outer Shadow Shell -->
+      <polygon points="-145,-265 -175,-245 -155,-160 -125,-165 -165,-240" fill="#0284c7" opacity="0.4" />
+      <polygon points="145,-265 175,-245 155,-160 125,-165 165,-240" fill="#0284c7" opacity="0.4" />
 
-      <!-- 4. Outer Cheeks Aerodynamic Contours -->
-      <polygon points="-95,-155 -165,-105 -195,-15 -115,10 -75,-65" fill="url(#slate-deep)" />
-      <polygon points="95,-155 165,-105 195,-15 115,10 75,-65" fill="url(#slate-light)" />
+      <!-- Shoulder Muscle Plates (Aerodynamic Facets) -->
+      <!-- Left Shoulder Plate -->
+      <polygon points="-190,-70 -275,70 -210,130 -160,15" fill="#1e293b" stroke="#334155" stroke-width="4" />
+      <polygon points="-275,70 -295,195 -210,225 -210,130" fill="#0f172a" />
+      <polygon points="-265,85 -280,180 -225,190" fill="url(#cyan-glow)" opacity="0.85" />
 
-      <polygon points="-195,-15 -235,50 -170,115 -115,10" fill="url(#obsidian-dark)" />
-      <polygon points="195,-15 235,50 170,115 115,10" fill="url(#slate-mid)" />
+      <!-- Right Shoulder Plate -->
+      <polygon points="190,-70 275,70 210,130 160,15" fill="#1e293b" stroke="#334155" stroke-width="4" />
+      <polygon points="275,70 295,195 210,225 210,130" fill="#0f172a" />
+      <polygon points="265,85 280,180 225,190" fill="url(#cyan-glow)" opacity="0.85" />
 
-      <!-- 5. Inner Ear Cavities (Glowing Electric Cyan) -->
-      <polygon points="-95,-155 -180,-255 -145,-120" fill="url(#cyan-glow)" opacity="0.9" />
-      <polygon points="95,-155 180,-255 145,-120" fill="url(#cyan-bright)" opacity="0.95" />
+      <!-- Cheetah Cranium & Forehead (Origami Planes) -->
+      <polygon points="0,-180 55,-110 0,-50 -55,-110" fill="url(#slate-facet-light)" stroke="#0f172a" stroke-width="3" />
+      <polygon points="0,-180 0,-50 -55,-110" fill="url(#slate-facet-mid)" />
 
-      <!-- 6. Forehead Geometric Facets -->
-      <polygon points="0,-185 -75,-140 0,-70" fill="url(#slate-deep)" />
-      <polygon points="0,-185 75,-140 0,-70" fill="url(#slate-light)" />
+      <!-- Amber Crown Peak (Speed Surge Crystal) -->
+      <polygon points="0,-175 -16,-140 0,-125 16,-140" fill="url(#amber-accent)" />
 
-      <polygon points="-75,-140 -95,-155 -75,-65 -45,-60" fill="url(#slate-mid)" />
-      <polygon points="75,-140 95,-155 75,-65 45,-60" fill="url(#slate-light)" />
+      <!-- Temples & Brow Ridges -->
+      <polygon points="-55,-110 -125,-70 -85,-20 -38,-40" fill="url(#slate-facet-mid)" stroke="#0f172a" stroke-width="3" />
+      <polygon points="55,-110 125,-70 85,-20 38,-40" fill="url(#slate-facet-light)" stroke="#0f172a" stroke-width="3" />
 
-      <!-- Center Pulse Crest (Amber / Cyan Peak) -->
-      <polygon points="0,-180 -18,-135 0,-115 18,-135" fill="url(#cyan-bright)" filter="url(#cyan-bloom)" />
+      <!-- Feline Nasal Bridge (Tapered Cheetah Muzzle) -->
+      <polygon points="0,-50 38,-40 34,45 0,65" fill="url(#slate-facet-light)" stroke="#0f172a" stroke-width="3" />
+      <polygon points="0,-50 -38,-40 -34,45 0,65" fill="url(#slate-facet-mid)" stroke="#0f172a" stroke-width="3" />
 
-      <!-- 7. Eyebrow Ridges -->
-      <polygon points="0,-70 -45,-60 -90,-35 -35,-30" fill="url(#slate-deep)" />
-      <polygon points="0,-70 45,-60 90,-35 35,-30" fill="url(#slate-mid)" />
+      <!-- Cheeks & Jowls (Sculpted Feline Aerodynamics) -->
+      <polygon points="-38,-40 -34,45 -85,35 -85,-20" fill="#0f172a" />
+      <polygon points="38,-40 34,45 85,35 85,-20" fill="url(#slate-facet-mid)" />
 
-      <!-- 8. Bridge of Muzzle -->
-      <polygon points="0,-70 -35,-30 -28,55 0,60" fill="url(#slate-deep)" />
-      <polygon points="0,-70 35,-30 28,55 0,60" fill="url(#slate-mid)" />
+      <polygon points="-85,-20 -125,-70 -160,15 -85,35" fill="url(#slate-facet-dark)" />
+      <polygon points="85,-20 125,-70 160,15 85,35" fill="url(#slate-facet-light)" />
 
-      <!-- 9. Cheetah Tear-Stripe Telemetry Channels (Signature Marking) -->
-      <path d="
-        M -35,-25
-        C -32,15 -42,50 -55,95
-        L -70,90
-        C -55,45 -48,15 -48,-25
-        Z
-      " fill="#020617" />
+      <!-- THE SIGNATURE CHEETAH TEAR-STRIPES (Iconic Black Facial Tracks) -->
+      <!-- Left Tear Line -->
+      <polygon points="-38,-35 -34,45 -48,70 -58,65 -45,-15" fill="#020617" stroke="#000000" stroke-width="1.5" />
+      <!-- Right Tear Line -->
+      <polygon points="38,-35 34,45 48,70 58,65 45,-15" fill="#020617" stroke="#000000" stroke-width="1.5" />
 
-      <path d="
-        M 35,-25
-        C 32,15 42,50 55,95
-        L 70,90
-        C 55,45 48,15 48,-25
-        Z
-      " fill="#020617" />
-
-      <!-- 10. Piercing Electric Cyan Feline Eyes -->
+      <!-- Feline Eyes (Piercing Electric Cyan Optics) -->
       <!-- Left Eye -->
-      <path d="
-        M -36,-26
-        C -55,-40 -78,-38 -92,-24
-        C -78,-16 -55,-16 -36,-26
-        Z
-      " fill="url(#cyan-glow)" filter="url(#cyan-bloom)" />
-
-      <!-- Left Pupil & Eyelid Edge -->
-      <polygon points="-68,-33 -62,-33 -60,-20 -66,-20" fill="#020617" />
-      <circle cx="-70" cy="-28" r="2.5" fill="#ffffff" />
+      <polygon points="-80,-38 -38,-30 -48,-12 -88,-22" fill="url(#cyan-glow)" stroke="#00f5ff" stroke-width="2" filter="url(#cyan-bloom)" />
+      <circle cx="-62" cy="-24" r="4.5" fill="#ffffff" />
+      <polygon points="-65,-33 -55,-31 -59,-16 -68,-18" fill="#070a13" opacity="0.8" />
 
       <!-- Right Eye -->
-      <path d="
-        M 36,-26
-        C 55,-40 78,-38 92,-24
-        C 78,-16 55,-16 36,-26
-        Z
-      " fill="url(#cyan-bright)" filter="url(#cyan-bloom)" />
+      <polygon points="80,-38 38,-30 48,-12 88,-22" fill="url(#cyan-glow)" stroke="#00f5ff" stroke-width="2" filter="url(#cyan-bloom)" />
+      <circle cx="62" cy="-24" r="4.5" fill="#ffffff" />
+      <polygon points="65,-33 55,-31 59,-16 68,-18" fill="#070a13" opacity="0.8" />
 
-      <!-- Right Pupil & Eyelid Edge -->
-      <polygon points="68,-33 62,-33 60,-20 66,-20" fill="#020617" />
-      <circle cx="66" cy="-28" r="2.5" fill="#ffffff" />
+      <!-- Feline Nose Leather (Electric Cyan Telemetry Port) -->
+      <polygon points="0,42 -25,36 -18,60 0,68" fill="#0284c7" />
+      <polygon points="0,42 25,36 18,60 0,68" fill="url(#cyan-bright)" />
 
-      <!-- 11. Muzzle Whisker Pads & Jaw -->
-      <polygon points="-28,55 -85,70 -65,120 -20,95" fill="url(#obsidian-dark)" />
-      <polygon points="28,55 85,70 65,120 20,95" fill="url(#slate-mid)" />
+      <!-- Chin & Jaw Line -->
+      <polygon points="0,68 -22,75 0,105 22,75" fill="#0f172a" />
 
-      <polygon points="-85,70 -140,40 -160,105 -65,120" fill="url(#slate-deep)" />
-      <polygon points="85,70 140,40 160,105 65,120" fill="url(#slate-light)" />
+      <!-- 3. HERALDIC LOADPULSE CHEST SHIELD: The Telemetry Engine Core -->
+      <!-- Pure White Clean Emblem Container -->
+      <polygon points="
+        0,135
+        85,185
+        85,285
+        0,335
+        -85,285
+        -85,185
+      " fill="#ffffff" stroke="#0f172a" stroke-width="10" stroke-linejoin="round" />
 
-      <!-- 12. Geometric Nose Pad -->
-      <path d="
-        M -24,60
-        C -10,56 10,56 24,60
-        L 16,88
-        C 6,94 -6,94 -16,88
-        Z
-      " fill="#020617" />
-      <polyline points="-18,63 0,60 18,63" fill="none" stroke="#00f5ff" stroke-width="2" opacity="0.6" />
+      <!-- Inside Chest Shield: The LoadPulse Reactive Heartbeat ECG Waveform -->
+      <polyline points="-65,235 -40,235 -24,200 -8,275 8,190 24,265 42,235 65,235"
+        fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="-65,235 -40,235 -24,200 -8,275 8,190 24,265 42,235 65,235"
+        fill="none" stroke="#00f5ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#cyan-bloom)" />
 
-      <!-- 13. Mouth & Chin -->
-      <polygon points="0,92 -20,125 0,135" fill="url(#slate-deep)" />
-      <polygon points="0,92 20,125 0,135" fill="url(#slate-light)" />
-      <polygon points="-20,125 -15,160 0,170 15,160 20,125 0,135" fill="url(#obsidian-dark)" stroke="#1e293b" stroke-width="1.5" />
+      <!-- Telemetry Peak Indicator Dots -->
+      <circle cx="8" cy="190" r="5.5" fill="#0284c7" />
+      <circle cx="8" cy="190" r="3" fill="#ffffff" />
+
+      <circle cx="-8" cy="275" r="5.5" fill="#00f5ff" />
+      <circle cx="-8" cy="275" r="3" fill="#ffffff" />
+
+      <!-- 4. Virtual Thread Loom / SLA Gating Node (Base Indicator) -->
+      <g transform="translate(0, 360)">
+        <circle cx="-50" cy="-15" r="9" fill="#00f5ff" stroke="#0f172a" stroke-width="3.5" />
+        <line x1="-38" y1="-15" x2="38" y2="-15" stroke="#00f5ff" stroke-width="5" stroke-dasharray="6,4" />
+        <polygon points="45,-15 33,-21 33,-9" fill="#00f5ff" />
+        <circle cx="-50" cy="-15" r="3.5" fill="#ffffff" />
+      </g>
 
     </g>
   </g>
