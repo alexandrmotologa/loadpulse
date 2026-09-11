@@ -1,0 +1,36 @@
+name: "Multi-step Checkout Flow"
+target: "http://localhost:8080"
+concurrency: 20
+duration: "10s"
+warmup: "1s"
+timeout: "5s"
+steps:
+  - name: "Health check"
+    path: "/health"
+    method: "GET"
+    thinkTimeMs: 50
+
+  - name: "Authenticate"
+    path: "/api/v1/auth"
+    method: "POST"
+    headers:
+      Content-Type: "application/json"
+    body: '{"username": "tester", "token": "{{ random_string(16) }}"}'
+    thinkTimeMs: 100
+
+  - name: "Place order"
+    path: "/api/v1/orders"
+    method: "POST"
+    headers:
+      Content-Type: "application/json"
+      X-Idempotency-Key: "{{ uuid() }}"
+    body: |
+      {
+        "id": "{{ uuid() }}",
+        "items": [
+          {"itemId": "ITEM-{{ random_int(1, 50) }}", "qty": {{ random_int(1, 5) }}}
+        ],
+        "created": {{ timestamp() }}
+      }
+    thinkTimeMs: 100
+assertion: "p95 < 100ms && error_rate < 0.05"
