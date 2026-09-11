@@ -101,6 +101,7 @@ public class TerminalHud implements AutoCloseable {
         sb.append(ANSI_BOLD).append("Status:\n").append(ANSI_RESET);
         sb.append("  ").append(ErrorSummaryWidget.render(s)).append("\n");
         sb.append(ANSI_GRAY).append("──────────────────────────────────────────────────────────────────────────────\n").append(ANSI_RESET);
+        sb.append(ANSI_GRAY).append("Hotkeys: [+] / [-] Concurrency │ [p] Pause/Resume │ [q] Early Finish\n").append(ANSI_RESET);
 
         out.print(sb);
         out.flush();

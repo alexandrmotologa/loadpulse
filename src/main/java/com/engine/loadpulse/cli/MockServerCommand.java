@@ -20,7 +20,7 @@ public class MockServerCommand implements Callable<Integer> {
     @Option(names = {"--jitter"}, defaultValue = "0ms", description = "Simulated delay jitter (e.g. 2ms)")
     private String jitter;
 
-    @Option(names = {"--error-rate"}, defaultValue = "0.0", description = "Error injection rate (0.0 to 1.0, e.g. 0.05 for 5%)")
+    @Option(names = {"--error-rate"}, defaultValue = "0.0", description = "Error injection rate (0.0 to 1.0, e.g. 0.05 for 5%%)")
     private double errorRate;
 
     @Override

@@ -20,7 +20,8 @@ public record ScenarioDefinition(
         String body,
         String timeout,
         List<ScenarioStep> steps,
-        String assertion
+        String assertion,
+        DataFeed.DataFeedConfig dataFeed
 ) {
     public ScenarioDefinition {
         if (concurrency <= 0) {

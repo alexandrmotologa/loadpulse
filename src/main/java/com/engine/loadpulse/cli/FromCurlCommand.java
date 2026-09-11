@@ -1,7 +1,7 @@
 package com.engine.loadpulse.cli;
 
+import com.engine.loadpulse.cli.curl.CurlParser;
 import com.engine.loadpulse.domain.model.BenchmarkConfig;
-import com.engine.loadpulse.domain.model.HttpMethod;
 import com.engine.loadpulse.domain.metric.PercentileSnapshot;
 import com.engine.loadpulse.domain.scenario.ScenarioDefinition;
 import com.engine.loadpulse.engine.WorkerPool;
@@ -13,19 +13,15 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
-@Command(name = "run", description = "Execute reactive benchmark against a target endpoint", mixinStandardHelpOptions = true)
-public class RunCommand implements Callable<Integer> {
+@Command(name = "from-curl", description = "Execute benchmark by directly importing a cURL command", mixinStandardHelpOptions = true)
+public class FromCurlCommand implements Callable<Integer> {
 
-    @Parameters(index = "0", description = "Target HTTP URL to benchmark")
-    private URI targetUri;
+    @Parameters(index = "0", description = "Raw cURL command string (e.g. \"curl 'http://api...' -X POST -H '...' -d '...'\")")
+    private String curlCommand;
 
     @Option(names = {"-c", "--concurrency"}, defaultValue = "50", description = "Number of concurrent Virtual Thread workers")
     private int concurrency;
@@ -39,20 +35,8 @@ public class RunCommand implements Callable<Integer> {
     @Option(names = {"--ramp-up"}, defaultValue = "0s", description = "Ramp-up duration from 1 to target concurrency (e.g. 10s)")
     private String rampUp;
 
-    @Option(names = {"--stages"}, description = "Workload stages in 'duration:target,...' format (e.g. '10s:20,30s:100,10s:0')")
-    private String stagesStr;
-
-    @Option(names = {"-m", "--method"}, defaultValue = "GET", description = "HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD)")
-    private String method;
-
     @Option(names = {"-r", "--rps"}, defaultValue = "0", description = "Target requests per second (rate pacing; 0 = closed concurrency)")
     private int rps;
-
-    @Option(names = {"-H", "--header"}, description = "Custom header in 'Key: Value' format (can be repeated)")
-    private List<String> headers;
-
-    @Option(names = {"-b", "--body"}, description = "Request body payload (supports dynamic templates like {{ uuid() }})")
-    private String body;
 
     @Option(names = {"--timeout"}, defaultValue = "10s", description = "Per-request timeout (e.g. 5s)")
     private String timeout;
@@ -60,7 +44,7 @@ public class RunCommand implements Callable<Integer> {
     @Option(names = {"--http1"}, description = "Force HTTP/1.1 instead of default HTTP/2")
     private boolean http1;
 
-    @Option(names = {"--no-tui"}, description = "Disable ANSI live terminal HUD (auto-detected in CI)")
+    @Option(names = {"--no-tui"}, description = "Disable ANSI live terminal HUD")
     private boolean noTui;
 
     @Option(names = {"--html"}, description = "Path to write standalone HTML benchmark report")
@@ -74,44 +58,23 @@ public class RunCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        Map<String, String> headerMap = new HashMap<>();
-        if (headers != null) {
-            for (String h : headers) {
-                int idx = h.indexOf(':');
-                if (idx > 0) {
-                    headerMap.put(h.substring(0, idx).trim(), h.substring(idx + 1).trim());
-                }
-            }
-        }
+        CurlParser.ParsedCurl parsed = CurlParser.parse(curlCommand);
 
         Duration benchDuration = ScenarioDefinition.parseTimeDuration(duration, Duration.ofSeconds(10));
         Duration warmupDuration = ScenarioDefinition.parseTimeDuration(warmup, Duration.ZERO);
         Duration rampUpDuration = ScenarioDefinition.parseTimeDuration(rampUp, Duration.ZERO);
         Duration reqTimeout = ScenarioDefinition.parseTimeDuration(timeout, Duration.ofSeconds(10));
 
-        java.util.List<com.engine.loadpulse.domain.model.LoadStage> parsedStages = new java.util.ArrayList<>();
-        if (stagesStr != null && !stagesStr.isBlank()) {
-            for (String part : stagesStr.split(",")) {
-                String[] pair = part.trim().split(":");
-                if (pair.length == 2) {
-                    Duration d = ScenarioDefinition.parseTimeDuration(pair[0].trim(), Duration.ofSeconds(10));
-                    int target = Integer.parseInt(pair[1].trim());
-                    parsedStages.add(com.engine.loadpulse.domain.model.LoadStage.concurrency(d, target));
-                }
-            }
-        }
-
         BenchmarkConfig config = BenchmarkConfig.builder()
-                .targetUri(targetUri)
-                .method(HttpMethod.fromString(method))
+                .targetUri(parsed.targetUri())
+                .method(parsed.method())
                 .concurrency(concurrency)
                 .duration(benchDuration)
                 .warmupDuration(warmupDuration)
                 .rampUpDuration(rampUpDuration)
-                .stages(parsedStages)
                 .targetRps(rps)
-                .headers(headerMap)
-                .body(body)
+                .headers(parsed.headers())
+                .body(parsed.body())
                 .requestTimeout(reqTimeout)
                 .http2(!http1)
                 .noTui(noTui)
@@ -120,7 +83,7 @@ public class RunCommand implements Callable<Integer> {
                 .assertionExpression(assertion)
                 .build();
 
-        TerminalHud hud = new TerminalHud(targetUri.toString(), concurrency, benchDuration, noTui);
+        TerminalHud hud = new TerminalHud(parsed.targetUri().toString(), concurrency, benchDuration, noTui);
         PercentileSnapshot finalSnapshot;
 
         try (hud;
@@ -132,7 +95,6 @@ public class RunCommand implements Callable<Integer> {
 
         hud.renderFinalSummary(finalSnapshot);
 
-        // Evaluate SLA assertions if specified
         SlaAssertionEvaluator.AssertionResult assertionResult = null;
         if (assertion != null && !assertion.isBlank()) {
             assertionResult = SlaAssertionEvaluator.evaluate(assertion, finalSnapshot);
@@ -147,14 +109,13 @@ public class RunCommand implements Callable<Integer> {
             }
         }
 
-        // Export reports
         if (jsonReport != null) {
-            JsonReportGenerator.generateReport(finalSnapshot, targetUri.toString(), concurrency, jsonReport);
+            JsonReportGenerator.generateReport(finalSnapshot, parsed.targetUri().toString(), concurrency, jsonReport);
             System.out.println("JSON report exported to: " + jsonReport.toAbsolutePath());
         }
 
         if (htmlReport != null) {
-            HtmlReportGenerator.generateReport(finalSnapshot, targetUri.toString(), concurrency, assertion, assertionResult, htmlReport);
+            HtmlReportGenerator.generateReport(finalSnapshot, parsed.targetUri().toString(), concurrency, assertion, assertionResult, htmlReport);
             System.out.println("HTML report exported to: " + htmlReport.toAbsolutePath());
         }
 

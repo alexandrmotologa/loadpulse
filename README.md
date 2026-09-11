@@ -36,12 +36,17 @@ Using Project Loom Virtual Threads (`java.lang.Thread.ofVirtual()`), LoadPulse r
 
 - Virtual Thread worker engine: spawns thousands of concurrent workers without OS thread exhaustion or memory bloat.
 - Dual workload models: supports closed concurrency loops (`-c 500`) and open rate-paced generation (`--rps 10000`) via a nano-precision token bucket rate limiter.
+- Load stages and ramp profiles: define multi-phase traffic ramp-up and ramp-down shapes (`--stages "30s:50,1m:200,30s:0"` or `--ramp-up 10s`).
+- Interactive TUI hotkeys: dynamically scale concurrency (`+` / `-`), pause traffic (`p`), or gracefully terminate (`q`) during a live run.
 - Microsecond latency telemetry: integrates HdrHistogram with three significant figures, tracking values from 1 microsecond to 1 hour with zero garbage collection overhead in the recording path.
 - Coordinated Omission compensation: applies Gil Tene correction algorithms to account for client-side queue stalls during server hiccups.
 - HTTP/2 and HTTP/1.1 client reuse: persistent connection pooling, multiplexing, and automatic fallback.
+- WebSocket benchmarking engine: test streaming endpoints and stateful socket connections (`loadpulse ws`) with handshake and round-trip latency tracking.
 - Live ANSI terminal dashboard: 10 FPS refresh displaying an RPS speedometer, microsecond latency percentile matrix, dynamic Unicode histogram bars, and color-coded status badges.
 - Headless and CI detection: automatically switches to clean periodic log lines when running in non-interactive terminals or GitHub Actions.
-- Declarative YAML scenarios: multi-step workflows with dynamic variables (`{{ uuid() }}`, `{{ random_int(1, 100) }}`, `{{ timestamp() }}`, `{{ counter() }}`, `{{ random_string(16) }}`).
+- Declarative YAML scenarios: multi-step workflows with dynamic variables (`{{ uuid() }}`, `{{ random_int(1, 100) }}`, `{{ timestamp() }}`), response extraction (`$.data.token`), and external CSV data feeds.
+- cURL importer: immediately convert production cURL commands into runnable benchmarks or exported YAML scenario files (`loadpulse from-curl`).
+- Performance regression diff engine: compare baseline vs candidate benchmark runs (`loadpulse diff`) with customizable degradation thresholds.
 - Automated SLA assertions: evaluate criteria like `--assert "p99 < 50ms && error_rate < 0.01"` and exit with status code 0 on success or 1 on SLA failure.
 - Standalone HTML reports: self-contained single-file dark mode reports with inline SVG percentile ladder curves and distribution charts without CDN dependencies.
 - Built-in mock benchmark target: includes an embedded high-throughput mock server with configurable delay, jitter, and error injection for self-testing and pipeline validation.
@@ -74,6 +79,15 @@ java -jar target/loadpulse.jar run http://localhost:8080/api/v1/orders \
   --warmup 3s
 ```
 
+### Staged ramp-up traffic
+
+Ramp up from 10 to 500 workers across staged intervals:
+
+```bash
+java -jar target/loadpulse.jar run http://localhost:8080/api/v1/checkout \
+  --stages "15s:50,1m:200,30s:500,15s:0"
+```
+
 ### Fixed rate (open workload model)
 
 Generate a steady pace of 5,000 requests per second across 200 workers:
@@ -97,6 +111,44 @@ java -jar target/loadpulse.jar run http://localhost:8080/api/v1/orders \
   -b '{"orderId": "{{ uuid() }}", "customerId": "CUST-{{ random_int(1, 500) }}", "amount": {{ random_int(10, 1000) }}}'
 ```
 
+### Import and benchmark from a cURL command
+
+Turn an intercepted browser or Postman cURL command directly into a 100-worker load test:
+
+```bash
+java -jar target/loadpulse.jar from-curl \
+  "curl -X POST 'http://localhost:8080/api/login' -H 'Content-Type: application/json' -d '{\"user\":\"alice\"}'" \
+  -c 100 -d 30s
+```
+
+Or export it directly to a clean YAML scenario file:
+
+```bash
+java -jar target/loadpulse.jar from-curl \
+  "curl -X GET 'http://localhost:8080/api/catalog'" \
+  --yaml scenario-generated.yaml
+```
+
+### Compare benchmark runs (Regression Diff)
+
+Evaluate candidate performance against a previous baseline in CI:
+
+```bash
+java -jar target/loadpulse.jar diff baseline.json candidate.json --threshold 10% --html diff-report.html
+```
+
+### WebSocket benchmarking
+
+Benchmark streaming WebSocket servers with 50 concurrent connections:
+
+```bash
+java -jar target/loadpulse.jar ws ws://localhost:8080/ws/echo \
+  -c 50 \
+  -d 30s \
+  -m '{"action":"ping"}' \
+  --expect '{"action":"pong"}'
+```
+
 ### Export HTML and JSON reports with SLA assertion
 
 ```bash
@@ -113,32 +165,38 @@ java -jar target/loadpulse.jar run http://localhost:8080/api/v1/orders \
 ```
 com.engine.loadpulse/
 ├── domain/                          # Zero-dependency domain models
-│   ├── model/                       # BenchmarkConfig, HttpMethod, WorkloadModel
+│   ├── model/                       # BenchmarkConfig, LoadStage, HttpMethod, WorkloadModel
 │   ├── metric/                      # LatencySample, PercentileSnapshot, HttpStatusSummary
-│   └── scenario/                    # ScenarioDefinition, ScenarioStep, DynamicPayloadGenerator
+│   └── scenario/                    # ScenarioDefinition, ScenarioStep, DataFeed, ResponseExtractor
 ├── engine/                          # Virtual Thread Engine Core
-│   ├── WorkerPool.java              # Virtual thread executor managing concurrent workers
+│   ├── WorkerPool.java              # Virtual thread executor managing concurrent workers & stages
 │   ├── HttpClientPool.java          # Low-latency HTTP/1.1 & HTTP/2 connection reuse
 │   ├── RateLimiter.java             # Token bucket rate pacer (System.nanoTime precision)
-│   └── ScenarioExecutor.java        # Multi-step sequential or burst scenario runner
+│   ├── ScenarioExecutor.java        # Multi-step sequential or burst scenario runner
+│   └── websocket/                   # WebSocket benchmark engine with round-trip tracking
 ├── histogram/                       # Microsecond-Precision Latency Telemetry
 │   ├── LatencyRecorder.java         # Thread-safe HdrHistogram accumulator
 │   └── RollingWindowHistogram.java  # Sliding 1-second snapshots for live TUI graphs
 ├── tui/                             # High-FPS ANSI Terminal Visualization
 │   ├── TerminalHud.java             # Full-screen dashboard and CI log switcher
+│   ├── TerminalKeyboardListener.java# Interactive hotkeys (+, -, p, q)
 │   ├── AsciiHistogramWidget.java    # Dynamic Unicode histogram distribution bars
 │   ├── SpeedometerWidget.java       # Current RPS vs Peak RPS gauge
-│   └── ErrorSummaryWidget.java      # Color-coded 2xx, 3xx, 4xx, 5xx, timeouts breakdown
+│   └── ErrorSummaryWidget.java      # Color-coded status and error breakdowns
 ├── report/                          # Exporters & SLA Evaluation
 │   ├── HtmlReportGenerator.java     # Self-contained offline HTML report with SVG charts
 │   ├── JsonReportGenerator.java     # Machine-readable JSON summary for CI/CD
+│   ├── DiffReportGenerator.java     # Baseline vs candidate regression diff reporter
 │   └── SlaAssertionEvaluator.java   # Rule evaluator for p99, p95, rps, and error rate
 ├── mock/                            # Built-in Mock Server
 │   └── MockBenchmarkServer.java     # Embedded Virtual Thread HTTP server with delay and jitter
 └── cli/                             # PicoCLI Commands
     ├── LoadPulseCli.java            # Root command & help metadata
-    ├── RunCommand.java              # CLI runner
-    ├── ScenarioCommand.java         # YAML scenario runner
+    ├── RunCommand.java              # CLI runner (with stages, ramp-up, hotkeys)
+    ├── ScenarioCommand.java         # YAML scenario runner (with feeds & response extraction)
+    ├── FromCurlCommand.java         # cURL command importer & YAML generator
+    ├── DiffCommand.java             # Performance regression diff checker
+    ├── WebSocketCommand.java        # WebSocket load test command
     └── MockServerCommand.java       # Mock server runner
 ```
 

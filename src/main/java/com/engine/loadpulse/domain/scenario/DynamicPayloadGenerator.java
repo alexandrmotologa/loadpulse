@@ -1,6 +1,7 @@
 package com.engine.loadpulse.domain.scenario;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -9,11 +10,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DynamicPayloadGenerator {
-    private static final Pattern PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_]+)(\\((.*?)\\))?\\s*\\}\\}");
+    private static final Pattern PATTERN = Pattern.compile("\\{\\{\\s*([a-zA-Z0-9_.]+)(\\((.*?)\\))?\\s*\\}\\}");
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private final AtomicLong counter = new AtomicLong(1);
 
     public String interpolate(String template) {
+        return interpolate(template, null, null);
+    }
+
+    public String interpolate(String template, Map<String, String> sessionVars, Map<String, String> feedRow) {
         if (template == null || template.isEmpty()) {
             return template;
         }
@@ -22,17 +27,34 @@ public class DynamicPayloadGenerator {
         StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
-            String functionName = matcher.group(1).toLowerCase();
+            String token = matcher.group(1);
+            String functionName = token.toLowerCase();
             String argsStr = matcher.group(3);
 
-            String replacement = resolve(functionName, argsStr);
+            String replacement = resolve(token, functionName, argsStr, sessionVars, feedRow);
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(sb);
         return sb.toString();
     }
 
-    private String resolve(String functionName, String argsStr) {
+    private String resolve(
+            String originalToken,
+            String functionName,
+            String argsStr,
+            Map<String, String> sessionVars,
+            Map<String, String> feedRow
+    ) {
+        if (originalToken.startsWith("vars.") && sessionVars != null) {
+            String key = originalToken.substring("vars.".length());
+            return sessionVars.getOrDefault(key, "");
+        }
+
+        if (originalToken.startsWith("feed.") && feedRow != null) {
+            String key = originalToken.substring("feed.".length());
+            return feedRow.getOrDefault(key, "");
+        }
+
         return switch (functionName) {
             case "uuid" -> UUID.randomUUID().toString();
             case "timestamp" -> String.valueOf(System.currentTimeMillis());
@@ -78,7 +100,7 @@ public class DynamicPayloadGenerator {
                 }
                 yield new String(chars);
             }
-            default -> "{{" + functionName + (argsStr != null ? "(" + argsStr + ")" : "") + "}}";
+            default -> "{{" + originalToken + (argsStr != null ? "(" + argsStr + ")" : "") + "}}";
         };
     }
 

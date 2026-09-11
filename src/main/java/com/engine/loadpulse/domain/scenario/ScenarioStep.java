@@ -14,7 +14,8 @@ public record ScenarioStep(
         Map<String, String> headers,
         Map<String, String> queryParams,
         String body,
-        long thinkTimeMs
+        long thinkTimeMs,
+        Map<String, String> extract
 ) {
     public ScenarioStep {
         if (method == null || method.isBlank()) {
@@ -22,6 +23,7 @@ public record ScenarioStep(
         }
         headers = headers != null ? Collections.unmodifiableMap(headers) : Collections.emptyMap();
         queryParams = queryParams != null ? Collections.unmodifiableMap(queryParams) : Collections.emptyMap();
+        extract = extract != null ? Collections.unmodifiableMap(extract) : Collections.emptyMap();
     }
 
     public HttpMethod resolvedMethod() {

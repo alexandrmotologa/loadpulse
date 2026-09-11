@@ -1,8 +1,11 @@
 package com.engine.loadpulse;
 
+import com.engine.loadpulse.cli.DiffCommand;
+import com.engine.loadpulse.cli.FromCurlCommand;
 import com.engine.loadpulse.cli.MockServerCommand;
 import com.engine.loadpulse.cli.RunCommand;
 import com.engine.loadpulse.cli.ScenarioCommand;
+import com.engine.loadpulse.cli.WebSocketCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -10,10 +13,13 @@ import picocli.CommandLine.Command;
         name = "loadpulse",
         description = "Reactive HTTP/1.1, HTTP/2 & gRPC load testing engine powered by Java 21 Virtual Threads and HdrHistogram",
         mixinStandardHelpOptions = true,
-        version = "loadpulse 1.0.0",
+        version = "loadpulse 1.1.0",
         subcommands = {
                 RunCommand.class,
                 ScenarioCommand.class,
+                FromCurlCommand.class,
+                DiffCommand.class,
+                WebSocketCommand.class,
                 MockServerCommand.class
         }
 )

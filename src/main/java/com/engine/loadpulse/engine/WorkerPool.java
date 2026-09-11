@@ -2,26 +2,29 @@ package com.engine.loadpulse.engine;
 
 import com.engine.loadpulse.domain.model.BenchmarkConfig;
 import com.engine.loadpulse.domain.model.HttpMethod;
+import com.engine.loadpulse.domain.model.LoadStage;
 import com.engine.loadpulse.domain.metric.PercentileSnapshot;
 import com.engine.loadpulse.domain.scenario.DynamicPayloadGenerator;
 import com.engine.loadpulse.histogram.LatencyRecorder;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 public class WorkerPool implements AutoCloseable {
+    private static final int MAX_WORKERS = 10_000;
+
     private final BenchmarkConfig config;
     private final HttpClientPool clientPool;
     private final LatencyRecorder recorder;
@@ -29,6 +32,8 @@ public class WorkerPool implements AutoCloseable {
     private final RateLimiter rateLimiter;
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean measuring = new AtomicBoolean(false);
+    private final AtomicBoolean paused = new AtomicBoolean(false);
+    private final AtomicInteger activeTargetWorkers;
 
     public WorkerPool(BenchmarkConfig config) {
         this.config = config;
@@ -36,19 +41,22 @@ public class WorkerPool implements AutoCloseable {
         this.recorder = new LatencyRecorder();
         this.payloadGenerator = new DynamicPayloadGenerator();
         this.rateLimiter = config.targetRps() > 0 ? new RateLimiter(config.targetRps()) : null;
+        this.activeTargetWorkers = new AtomicInteger(
+                !config.rampUpDuration().isZero() ? 1 : config.concurrency()
+        );
     }
 
     public PercentileSnapshot runBenchmark(Consumer<PercentileSnapshot> liveStatsConsumer) throws InterruptedException {
         running.set(true);
-        int workers = config.concurrency();
-        CountDownLatch finishLatch = new CountDownLatch(workers);
+        int maxWorkers = Math.max(config.concurrency() * 2, 100);
+        CountDownLatch finishLatch = new CountDownLatch(maxWorkers);
 
         long expectedIntervalMicros = rateLimiter != null ? rateLimiter.getIntervalMicros() : 0L;
 
         // Warm-up phase if configured
         if (!config.warmupDuration().isZero()) {
             measuring.set(false);
-            startWorkerThreads(workers, finishLatch, expectedIntervalMicros);
+            startWorkerThreads(maxWorkers, finishLatch);
             Thread.sleep(config.warmupDuration().toMillis());
             recorder.reset();
         }
@@ -59,10 +67,22 @@ public class WorkerPool implements AutoCloseable {
 
         // If no warmup was run, start worker threads now
         if (config.warmupDuration().isZero()) {
-            startWorkerThreads(workers, finishLatch, expectedIntervalMicros);
+            startWorkerThreads(maxWorkers, finishLatch);
         }
 
-        // Timer thread or ticker for live stats
+        // Handle ramp-up or stages asynchronously
+        Thread profileThread = Thread.ofVirtual().name("loadpulse-profiler").start(() -> {
+            try {
+                if (!config.stages().isEmpty()) {
+                    executeStages(config.stages());
+                } else if (!config.rampUpDuration().isZero()) {
+                    executeRampUp(config.rampUpDuration(), config.concurrency());
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+
+        // Ticker thread for live stats
         Thread tickerThread = Thread.ofVirtual().name("loadpulse-ticker").start(() -> {
             while (running.get()) {
                 try {
@@ -77,14 +97,20 @@ public class WorkerPool implements AutoCloseable {
             }
         });
 
-        // Sleep for the configured duration
-        Thread.sleep(config.duration().toMillis());
+        // Run until duration elapsed or requested stop
+        long totalDurationMs = computeTotalDurationMs();
+        long deadlineNano = startNano + TimeUnit.MILLISECONDS.toNanos(totalDurationMs);
+
+        while (running.get() && System.nanoTime() < deadlineNano) {
+            Thread.sleep(50);
+        }
 
         // Stop benchmark
         running.set(false);
+        profileThread.interrupt();
         tickerThread.interrupt();
 
-        finishLatch.await(5, TimeUnit.SECONDS);
+        finishLatch.await(3, TimeUnit.SECONDS);
 
         double totalElapsed = (System.nanoTime() - startNano) / 1_000_000_000.0;
         PercentileSnapshot finalSnapshot = recorder.createSnapshot(totalElapsed);
@@ -95,14 +121,63 @@ public class WorkerPool implements AutoCloseable {
         return finalSnapshot;
     }
 
-    private void startWorkerThreads(int workers, CountDownLatch latch, long expectedIntervalMicros) {
-        for (int i = 0; i < workers; i++) {
-            Thread.ofVirtual().name("loadpulse-worker-", i + 1).start(() -> {
+    private void executeRampUp(Duration rampDuration, int finalConcurrency) throws InterruptedException {
+        long rampMs = rampDuration.toMillis();
+        long steps = Math.min(finalConcurrency, 50);
+        long intervalMs = rampMs / Math.max(1, steps);
+
+        for (int i = 1; i <= steps; i++) {
+            if (!running.get()) break;
+            int target = (int) Math.round(((double) i / steps) * finalConcurrency);
+            activeTargetWorkers.set(Math.max(1, target));
+            Thread.sleep(intervalMs);
+        }
+        activeTargetWorkers.set(finalConcurrency);
+    }
+
+    private void executeStages(List<LoadStage> stages) throws InterruptedException {
+        for (LoadStage stage : stages) {
+            if (!running.get()) break;
+            activeTargetWorkers.set(stage.targetConcurrency());
+            if (rateLimiter != null && stage.targetRps() > 0) {
+                rateLimiter.setTargetRps(stage.targetRps());
+            }
+            Thread.sleep(stage.duration().toMillis());
+        }
+    }
+
+    private long computeTotalDurationMs() {
+        if (!config.stages().isEmpty()) {
+            long sum = 0;
+            for (LoadStage stage : config.stages()) {
+                sum += stage.duration().toMillis();
+            }
+            return sum;
+        }
+        return config.duration().toMillis() + config.rampUpDuration().toMillis();
+    }
+
+    private void startWorkerThreads(int totalWorkerCount, CountDownLatch latch) {
+        for (int i = 0; i < totalWorkerCount; i++) {
+            final int workerIndex = i;
+            Thread.ofVirtual().name("loadpulse-worker-", workerIndex + 1).start(() -> {
                 try {
                     while (running.get()) {
+                        if (paused.get()) {
+                            LockSupport.parkNanos(20_000_000L); // 20ms
+                            continue;
+                        }
+
+                        if (workerIndex >= activeTargetWorkers.get()) {
+                            LockSupport.parkNanos(20_000_000L);
+                            continue;
+                        }
+
                         if (rateLimiter != null) {
                             rateLimiter.acquire();
                         }
+
+                        long expectedIntervalMicros = rateLimiter != null ? rateLimiter.getIntervalMicros() : 0L;
                         executeRequest(expectedIntervalMicros);
                     }
                 } finally {
@@ -143,8 +218,7 @@ public class WorkerPool implements AutoCloseable {
                     recorder.recordLatency(latencyMicros);
                 }
 
-                int statusCode = response.statusCode();
-                recorder.recordStatus(statusCode);
+                recorder.recordStatus(response.statusCode());
 
                 byte[] body = response.body();
                 if (body != null) {
@@ -164,6 +238,35 @@ public class WorkerPool implements AutoCloseable {
                 recorder.recordConnectionError();
             }
         }
+    }
+
+    // Dynamic control methods for interactive TUI hotkeys
+    public void togglePause() {
+        paused.set(!paused.get());
+    }
+
+    public boolean isPaused() {
+        return paused.get();
+    }
+
+    public void adjustConcurrency(int delta) {
+        activeTargetWorkers.updateAndGet(curr -> Math.max(1, Math.min(MAX_WORKERS, curr + delta)));
+    }
+
+    public void adjustRps(int delta) {
+        if (rateLimiter != null) {
+            int current = rateLimiter.getTargetRps();
+            int updated = Math.max(1, current + delta);
+            rateLimiter.setTargetRps(updated);
+        }
+    }
+
+    public int getActiveTargetWorkers() {
+        return activeTargetWorkers.get();
+    }
+
+    public void requestStop() {
+        running.set(false);
     }
 
     public LatencyRecorder getRecorder() {

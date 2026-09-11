@@ -4,6 +4,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,6 +14,8 @@ public record BenchmarkConfig(
         int concurrency,
         Duration duration,
         Duration warmupDuration,
+        Duration rampUpDuration,
+        List<LoadStage> stages,
         int targetRps,
         Map<String, String> headers,
         String body,
@@ -35,10 +38,14 @@ public record BenchmarkConfig(
         if (warmupDuration == null || warmupDuration.isNegative()) {
             warmupDuration = Duration.ZERO;
         }
+        if (rampUpDuration == null || rampUpDuration.isNegative()) {
+            rampUpDuration = Duration.ZERO;
+        }
         if (requestTimeout == null || requestTimeout.isZero() || requestTimeout.isNegative()) {
             requestTimeout = Duration.ofSeconds(10);
         }
         headers = headers != null ? Collections.unmodifiableMap(headers) : Collections.emptyMap();
+        stages = stages != null ? Collections.unmodifiableList(stages) : Collections.emptyList();
     }
 
     public WorkloadModel workloadModel() {
@@ -55,6 +62,8 @@ public record BenchmarkConfig(
         private int concurrency = 50;
         private Duration duration = Duration.ofSeconds(10);
         private Duration warmupDuration = Duration.ZERO;
+        private Duration rampUpDuration = Duration.ZERO;
+        private List<LoadStage> stages = Collections.emptyList();
         private int targetRps = 0;
         private Map<String, String> headers = Collections.emptyMap();
         private String body;
@@ -87,6 +96,16 @@ public record BenchmarkConfig(
 
         public Builder warmupDuration(Duration warmupDuration) {
             this.warmupDuration = warmupDuration;
+            return this;
+        }
+
+        public Builder rampUpDuration(Duration rampUpDuration) {
+            this.rampUpDuration = rampUpDuration;
+            return this;
+        }
+
+        public Builder stages(List<LoadStage> stages) {
+            this.stages = stages;
             return this;
         }
 
@@ -142,6 +161,8 @@ public record BenchmarkConfig(
                     concurrency,
                     duration,
                     warmupDuration,
+                    rampUpDuration,
+                    stages,
                     targetRps,
                     headers,
                     body,
