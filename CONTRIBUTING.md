@@ -14,14 +14,16 @@ Please treat everyone in the community with respect, kindness, and constructive 
 
 ### 1. Reporting Bugs & Requesting Features
 - **Search existing issues** first to avoid duplicates.
-- **For bugs:** Open an issue describing the bug, including steps to reproduce, expected vs. actual behavior, and environment details (Java 21 LTS and build details (OS, JDK distribution, Maven version)).
-- **For feature requests:** Describe the problem you are trying to solve and propose a solution or interface specification.
+- **For bugs:** Open an issue describing the bug, including steps to reproduce, expected vs. actual behavior, and environment details (OS, JDK distribution, Maven version).
+- **For feature requests:** Describe the load testing scenario or metric analysis capability you would like to see supported.
 
 ### 2. Pull Request Workflow
 
-1. **Fork the repository** and clone your fork locally:
+1. **Fork the repository** and clone locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/loadpulse.git
+   git clone https://github.com/alexandrmotologa/loadpulse.git
+   # Or clone your personal fork if preparing a pull request:
+   # git clone https://github.com/YOUR_USERNAME/loadpulse.git
    cd loadpulse
    ```
 
@@ -32,10 +34,10 @@ Please treat everyone in the community with respect, kindness, and constructive 
    ```
 
 3. **Follow commit conventions:** We follow [Conventional Commits](https://www.conventionalcommits.org/):
-   - `feat: add bounded queue backpressure strategy`
-   - `fix: correct memory alignment in off-heap buffer`
-   - `docs: improve benchmark notes in README`
-   - `perf: reduce allocation footprint in ring buffer`
+   - `feat: add distributed virtual user ramp-up scheduler`
+   - `fix: correct p99 latency calculation in HDR histogram`
+   - `docs: update high-concurrency throughput benchmarks in README`
+   - `perf: optimize netty channel connection reuse under peak load`
 
 4. **Ensure code quality:**
    - Keep code clean, readable, and strictly typed.
