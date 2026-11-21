@@ -35,6 +35,11 @@ Using Project Loom Virtual Threads (`java.lang.Thread.ofVirtual()`), LoadPulse r
 
 ## Visual tour
 
+### Interactive Walkthrough
+<p align="center">
+  <img src="docs/images/loadpulse_demo.gif?raw=true" alt="LoadPulse Interactive Walkthrough Demo" width="100%" style="border-radius: 8px;" />
+</p>
+
 ### 1. Live interactive ANSI terminal HUD
 
 High-refresh dashboard displaying throughput speedometers, microsecond latency matrices, dynamic Unicode distribution histograms, and live hotkey controls (`+`, `-`, `p`, `q`).
