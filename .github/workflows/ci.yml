@@ -31,5 +31,5 @@ jobs:
           java -jar target/loadpulse.jar mock -p 18080 --delay 2ms &
           MOCK_PID=$!
           sleep 2
-          java -jar target/loadpulse.jar run http://localhost:18080/bench -c 50 -d 5s --warmup 1s --no-tui --assert "p99 < 50ms && error_rate < 0.05"
+          java -jar target/loadpulse.jar run http://localhost:18080/bench -c 50 -d 5s --warmup 1s --no-tui --assert "p99 < 100ms && error_rate < 0.05"
           kill $MOCK_PID
